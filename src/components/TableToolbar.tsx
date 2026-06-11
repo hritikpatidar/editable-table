@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
     Box,
     Button,
@@ -40,6 +40,45 @@ const TableToolbar: React.FC<TableToolbarProps> = ({
     totalRows,
 }) => {
     const inputHeight = 40;
+    const [localName, setLocalName] = useState(nameFilter);
+    const [localEmail, setLocalEmail] = useState(emailFilter);
+    const [localSalary, setLocalSalary] = useState(salaryFilter);
+
+    const nameDebounce = useRef<number | null>(null);
+    const emailDebounce = useRef<number | null>(null);
+    const salaryDebounce = useRef<number | null>(null);
+
+    // Sync incoming prop changes (e.g., on rehydrate) into local inputs
+    useEffect(() => setLocalName(nameFilter), [nameFilter]);
+    useEffect(() => setLocalEmail(emailFilter), [emailFilter]);
+    useEffect(() => setLocalSalary(salaryFilter), [salaryFilter]);
+
+    // Debounce updates to avoid frequent dispatches / persistence on each keystroke
+    useEffect(() => {
+        if (nameDebounce.current) window.clearTimeout(nameDebounce.current);
+        nameDebounce.current = window.setTimeout(() => setNameFilter(localName), 300) as unknown as number;
+        return () => { if (nameDebounce.current) window.clearTimeout(nameDebounce.current); };
+    }, [localName, setNameFilter]);
+
+    useEffect(() => {
+        if (emailDebounce.current) window.clearTimeout(emailDebounce.current);
+        emailDebounce.current = window.setTimeout(() => setEmailFilter(localEmail), 300) as unknown as number;
+        return () => { if (emailDebounce.current) window.clearTimeout(emailDebounce.current); };
+    }, [localEmail, setEmailFilter]);
+
+    useEffect(() => {
+        if (salaryDebounce.current) window.clearTimeout(salaryDebounce.current);
+        salaryDebounce.current = window.setTimeout(() => setSalaryFilter(localSalary), 300) as unknown as number;
+        return () => { if (salaryDebounce.current) window.clearTimeout(salaryDebounce.current); };
+    }, [localSalary, setSalaryFilter]);
+
+    const handleClear = () => {
+        // Clear persisted filters immediately and reset local inputs
+        onClearFilters();
+        setLocalName("");
+        setLocalEmail("");
+        setLocalSalary("");
+    };
     return (
         <Paper
             elevation={0}
@@ -94,8 +133,8 @@ const TableToolbar: React.FC<TableToolbarProps> = ({
                     label="Name"
                     size="small"
                     placeholder="John Doe"
-                    value={nameFilter}
-                    onChange={(e) => setNameFilter(e.target.value)}
+                    value={localName}
+                    onChange={(e) => setLocalName(e.target.value)}
                     sx={{
                         flex: { xs: 1, sm: "0 1 calc(25% - 10px)", md: "0 1 200px" },
                         minWidth: { xs: 0, sm: "140px" },
@@ -122,8 +161,8 @@ const TableToolbar: React.FC<TableToolbarProps> = ({
                     label="Email"
                     size="small"
                     placeholder="email@example.com"
-                    value={emailFilter}
-                    onChange={(e) => setEmailFilter(e.target.value)}
+                    value={localEmail}
+                    onChange={(e) => setLocalEmail(e.target.value)}
                     sx={{
                         flex: { xs: 1, sm: "0 1 calc(25% - 10px)", md: "0 1 220px" },
                         minWidth: { xs: 0, sm: "140px" },
@@ -151,8 +190,8 @@ const TableToolbar: React.FC<TableToolbarProps> = ({
                     type="number"
                     size="small"
                     placeholder="0"
-                    value={salaryFilter}
-                    onChange={(e) => setSalaryFilter(e.target.value)}
+                    value={localSalary}
+                    onChange={(e) => setLocalSalary(e.target.value)}
                     sx={{
                         flex: { xs: 1, sm: "0 1 calc(20% - 10px)", md: "0 1 150px" },
                         minWidth: { xs: 0, sm: "100px" },
@@ -180,7 +219,7 @@ const TableToolbar: React.FC<TableToolbarProps> = ({
                     variant="outlined"
                     size="small"
                     startIcon={<ClearIcon sx={{ fontSize: "1.2rem" }} />}
-                    onClick={onClearFilters}
+                    onClick={handleClear}
                     sx={{
                         flex: { xs: 1, sm: "0 1 auto" },
                         minWidth: { xs: 0, sm: "140px" },
