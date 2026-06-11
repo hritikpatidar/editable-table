@@ -1,4 +1,7 @@
 import { CssBaseline, ThemeProvider, createTheme } from "@mui/material";
+import { Provider } from "react-redux";
+import { PersistGate } from "redux-persist/integration/react";
+import { store, persistor } from "./redux/store";
 import Home from './pages/Home';
 
 const theme = createTheme({
@@ -56,10 +59,14 @@ const theme = createTheme({
 
 function App() {
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <Home />
-    </ThemeProvider>
+    <Provider store={store}>
+      <PersistGate loading={null} persistor={persistor}>
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          <Home />
+        </ThemeProvider>
+      </PersistGate>
+    </Provider>
   );
 }
 

@@ -1,9 +1,5 @@
-import React, {
-    useMemo,
-    useState,
-    useCallback,
-} from "react";
-
+import React, { useMemo, useCallback } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import {
     Box,
     Button,
@@ -23,11 +19,36 @@ import {
 import EditIcon from "@mui/icons-material/Edit";
 import SaveIcon from "@mui/icons-material/Save";
 import CancelIcon from "@mui/icons-material/Cancel";
-import RestartAltIcon from "@mui/icons-material/RestartAlt";
 
 import Papa from "papaparse";
 
-import { useTable } from "../context/TableContext";
+import { RootState, AppDispatch } from "../redux/store";
+import {
+    setNameFilter,
+    setEmailFilter,
+    setSalaryFilter,
+    clearFilters,
+} from "../redux/slices/filtersSlice";
+import {
+    setPage,
+    setRowsPerPage,
+} from "../redux/slices/paginationSlice";
+import {
+    setSortField,
+    setSortDirection,
+    setSort,
+} from "../redux/slices/sortSlice";
+import {
+    startEditing,
+    updateDraftRow,
+    cancelEditing,
+    clearEditing,
+} from "../redux/slices/editingSlice";
+import {
+    updateRow,
+    undo,
+    clearUndoHistory,
+} from "../redux/slices/tableDataSlice";
 
 import EditableCell from "./EditableCell";
 import TableToolbar from "./TableToolbar";
@@ -35,22 +56,25 @@ import Pagination from "./Pagination";
 import { Employee } from "../types/employee";
 
 const EditableTable = () => {
-    const { rows, setRows } = useTable();
-    const [nameFilter, setNameFilter] = useState("");
-    const [emailFilter, setEmailFilter] = useState("");
-    const [salaryFilter, setSalaryFilter] = useState("");
-    const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(25);
-    const [sortField, setSortField] = useState<keyof Employee>("id");
-    const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
-    const [editingRowId, setEditingRowId] = useState<number | null>(null);
-    const [draftRow, setDraftRow] = useState<Employee | null>(null);
-    const [undoHistory, setUndoHistory] = useState<Employee[]>([]);
-    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+    const dispatch = useDispatch<AppDispatch>();
+
+    // Redux selectors
+    const rows = useSelector((state: RootState) => state.tableData.rows);
+    const undoHistory = useSelector((state: RootState) => state.tableData.undoHistory);
+    const nameFilter = useSelector((state: RootState) => state.filters.nameFilter);
+    const emailFilter = useSelector((state: RootState) => state.filters.emailFilter);
+    const salaryFilter = useSelector((state: RootState) => state.filters.salaryFilter);
+    const page = useSelector((state: RootState) => state.pagination.page);
+    const rowsPerPage = useSelector((state: RootState) => state.pagination.rowsPerPage);
+    const sortField = useSelector((state: RootState) => state.sort.sortField);
+    const sortDirection = useSelector((state: RootState) => state.sort.sortDirection);
+    const editingRowId = useSelector((state: RootState) => state.editing.editingRowId);
+    const draftRow = useSelector((state: RootState) => state.editing.draftRow);
+    const hasUnsavedChanges = useSelector((state: RootState) => state.editing.hasUnsavedChanges);
 
     const handleExportCSV = () => {
         const csv = Papa.unparse(filteredAndSortedData);
-        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;", });
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
@@ -60,147 +84,93 @@ const EditableTable = () => {
         document.body.removeChild(link);
     };
 
-    const handleClearFilters =
-        useCallback(() => {
-            setNameFilter("");
-            setEmailFilter("");
-            setSalaryFilter("");
-        }, []);
+    const handleClearFilters = useCallback(() => {
+        dispatch(clearFilters());
+    }, [dispatch]);
 
     const filteredData = useMemo(() => {
         return rows.filter((item: Employee) => {
-            const matchName =
-                item.name
-                    .toLowerCase()
-                    .includes(
-                        nameFilter.toLowerCase()
-                    );
+            const matchName = item.name
+                .toLowerCase()
+                .includes(nameFilter.toLowerCase());
 
-            const matchEmail =
-                item.email
-                    .toLowerCase()
-                    .includes(
-                        emailFilter.toLowerCase()
-                    );
+            const matchEmail = item.email
+                .toLowerCase()
+                .includes(emailFilter.toLowerCase());
 
             const matchSalary =
                 salaryFilter === ""
                     ? true
-                    : item.salary >=
-                    Number(salaryFilter);
+                    : item.salary >= Number(salaryFilter);
 
-            return (
-                matchName &&
-                matchEmail &&
-                matchSalary
-            );
+            return matchName && matchEmail && matchSalary;
         });
-    }, [rows, nameFilter, emailFilter, salaryFilter,]);
+    }, [rows, nameFilter, emailFilter, salaryFilter]);
 
-    const filteredAndSortedData =
-        useMemo(() => {
-            const copied =
-                [...filteredData];
+    const filteredAndSortedData = useMemo(() => {
+        const copied = [...filteredData];
 
-            copied.sort((a, b) => {
-                const fieldA =
-                    a[sortField];
+        copied.sort((a, b) => {
+            const fieldA = a[sortField];
+            const fieldB = b[sortField];
 
-                const fieldB =
-                    b[sortField];
+            if (fieldA < fieldB)
+                return sortDirection === "asc" ? -1 : 1;
 
-                if (fieldA < fieldB)
-                    return sortDirection ===
-                        "asc"
-                        ? -1
-                        : 1;
+            if (fieldA > fieldB)
+                return sortDirection === "asc" ? 1 : -1;
 
-                if (fieldA > fieldB)
-                    return sortDirection ===
-                        "asc"
-                        ? 1
-                        : -1;
+            return 0;
+        });
 
-                return 0;
-            });
+        return copied;
+    }, [filteredData, sortField, sortDirection]);
 
-            return copied;
-        }, [filteredData, sortField, sortDirection,]);
-
-    const paginatedData =
-        useMemo(() => {
-            const start = page * rowsPerPage;
-
-            const end = start + rowsPerPage;
-
-            return filteredAndSortedData.slice(start, end);
-        }, [filteredAndSortedData, page, rowsPerPage,]);
+    const paginatedData = useMemo(() => {
+        const start = page * rowsPerPage;
+        const end = start + rowsPerPage;
+        return filteredAndSortedData.slice(start, end);
+    }, [filteredAndSortedData, page, rowsPerPage]);
 
     const handleEdit = (row: Employee) => {
-        setEditingRowId(row.id);
-        setDraftRow({
-            ...row,
-        });
-        setHasUnsavedChanges(false);
+        dispatch(
+            startEditing({
+                rowId: row.id,
+                draftRow: { ...row },
+            })
+        );
     };
 
     const handleCellChange = (field: keyof Employee, value: string | number) => {
         if (!draftRow) return;
-        setDraftRow({
-            ...draftRow,
-            [field]: value,
-        });
-        setHasUnsavedChanges(true);
+        dispatch(
+            updateDraftRow({
+                ...draftRow,
+                [field]: value,
+            })
+        );
     };
 
     const handleSave = () => {
         if (!draftRow) return;
-        const oldRow = rows.find((item: Employee) => item.id === draftRow.id);
-        if (oldRow) {
-            setUndoHistory(
-                (prev) => [
-                    ...prev,
-                    oldRow,
-                ]
-            );
-        }
-        setRows((prev: Employee[]) =>
-            prev.map((item: Employee) => item.id === draftRow.id ? draftRow : item)
-        );
-        setEditingRowId(null);
-        setDraftRow(null);
-        setHasUnsavedChanges(false);
+        dispatch(updateRow(draftRow));
+        dispatch(clearEditing());
     };
 
     const handleCancel = () => {
-        setEditingRowId(null);
-        setDraftRow(null);
-        setHasUnsavedChanges(false);
+        dispatch(cancelEditing());
     };
 
     const handleUndo = () => {
         if (undoHistory.length === 0) return;
-        const previousRow = undoHistory[undoHistory.length - 1];
-        setRows((prev: Employee[]) =>
-            prev.map(
-                (
-                    item: Employee
-                ) =>
-                    item.id ===
-                        previousRow.id
-                        ? previousRow
-                        : item
-            )
-        );
-        setUndoHistory((prev) => prev.slice(0, -1));
+        dispatch(undo());
     };
 
     const handleSort = (field: keyof Employee) => {
         if (sortField === field) {
-            setSortDirection((prev) => prev === "asc" ? "desc" : "asc");
+            dispatch(setSortDirection(sortDirection === "asc" ? "desc" : "asc"));
         } else {
-            setSortField(field);
-            setSortDirection("asc");
+            dispatch(setSort({ sortField: field, sortDirection: "asc" }));
         }
     };
 
@@ -213,25 +183,13 @@ const EditableTable = () => {
         };
         window.addEventListener("beforeunload", handler);
         return () => window.removeEventListener("beforeunload", handler);
-    }, [hasUnsavedChanges,]);
+    }, [hasUnsavedChanges]);
 
     const headers = [
-        {
-            label: "ID",
-            key: "id",
-        },
-        {
-            label: "Name",
-            key: "name",
-        },
-        {
-            label: "Email",
-            key: "email",
-        },
-        {
-            label: "Salary",
-            key: "salary",
-        },
+        { label: "ID", key: "id" },
+        { label: "Name", key: "name" },
+        { label: "Email", key: "email" },
+        { label: "Salary", key: "salary" },
     ] as const;
 
     return (
@@ -274,9 +232,9 @@ const EditableTable = () => {
                 nameFilter={nameFilter}
                 emailFilter={emailFilter}
                 salaryFilter={salaryFilter}
-                setNameFilter={setNameFilter}
-                setEmailFilter={setEmailFilter}
-                setSalaryFilter={setSalaryFilter}
+                setNameFilter={(val) => dispatch(setNameFilter(val))}
+                setEmailFilter={(val) => dispatch(setEmailFilter(val))}
+                setSalaryFilter={(val) => dispatch(setSalaryFilter(val))}
                 onClearFilters={handleClearFilters}
                 onExportCSV={handleExportCSV}
                 onUndo={handleUndo}
@@ -500,15 +458,14 @@ const EditableTable = () => {
                                                 </Typography>
                                             )}
                                         </TableCell>
-                                        <TableCell align="center">
+                                        <TableCell align="center" sx={{ minWidth: 280 }}>
                                             {isEditing ? (
-                                                <Stack
-                                                    direction="row"
-                                                    spacing={0.5}
+                                                <Box
                                                     sx={{
+                                                        display: "flex",
                                                         justifyContent: "center",
-                                                        flexWrap: "wrap",
-                                                        gap: { xs: 0.5, sm: 1 },
+                                                        gap: 1,
+                                                        alignItems: "center",
                                                     }}
                                                 >
                                                     <Tooltip title="Save changes">
@@ -518,11 +475,13 @@ const EditableTable = () => {
                                                             startIcon={<SaveIcon />}
                                                             onClick={handleSave}
                                                             sx={{
-                                                                minWidth: 110,
+                                                                minWidth: 95,
+                                                                height: 36,
                                                                 background: "linear-gradient(135deg, var(--success) 0%, #059669 100%)",
                                                                 textTransform: "none",
-                                                                fontWeight: 600,
                                                                 color: "var(--text)",
+                                                                backgroundColor: "var(--primary)",
+                                                                fontWeight: 600,
                                                                 borderRadius: "6px",
                                                                 boxShadow: "0 2px 4px rgba(16, 185, 129, 0.2)",
                                                                 transition: "all 0.2s",
@@ -530,8 +489,7 @@ const EditableTable = () => {
                                                                     boxShadow: "0 4px 8px rgba(16, 185, 129, 0.3)",
                                                                     transform: "translateY(-1px)",
                                                                 },
-                                                                fontSize: { xs: "0.78rem", sm: "0.875rem" },
-                                                                px: { xs: 1, sm: 1.5 },
+                                                                fontSize: "0.85rem",
                                                             }}
                                                         >
                                                             Save
@@ -545,26 +503,27 @@ const EditableTable = () => {
                                                             startIcon={<CancelIcon />}
                                                             onClick={handleCancel}
                                                             sx={{
-                                                                minWidth: 110,
+                                                                minWidth: 95,
+                                                                height: 36,
                                                                 borderColor: "var(--danger)",
                                                                 color: "var(--danger)",
                                                                 textTransform: "none",
                                                                 fontWeight: 600,
                                                                 borderRadius: "6px",
                                                                 transition: "all 0.2s",
+                                                                border: "1.5px solid var(--danger)",
                                                                 "&:hover": {
-                                                                    backgroundColor:
-                                                                        "rgba(239, 68, 68, 0.08)",
+                                                                    backgroundColor: "rgba(239, 68, 68, 0.08)",
                                                                     borderColor: "var(--danger)",
+                                                                    borderWidth: "1.5px",
                                                                 },
-                                                                fontSize: { xs: "0.78rem", sm: "0.875rem" },
-                                                                px: { xs: 1, sm: 1.5 },
+                                                                fontSize: "0.85rem",
                                                             }}
                                                         >
                                                             Cancel
                                                         </Button>
                                                     </Tooltip>
-                                            </Stack>
+                                                </Box>
                                             ) : (
                                                 <Tooltip title="Edit this record">
                                                     <Button
@@ -573,10 +532,12 @@ const EditableTable = () => {
                                                         startIcon={<EditIcon />}
                                                         onClick={() => handleEdit(row)}
                                                         sx={{
-                                                            minWidth: 110,
+                                                            minWidth: 100,
+                                                            height: 36,
                                                             background: "linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%)",
-                                                            textTransform: "none",
                                                             color: "var(--text)",
+                                                            backgroundColor: "var(--primary)",
+                                                            textTransform: "none",
                                                             fontWeight: 600,
                                                             borderRadius: "6px",
                                                             boxShadow: "0 2px 4px rgba(37, 99, 235, 0.2)",
@@ -585,8 +546,7 @@ const EditableTable = () => {
                                                                 boxShadow: "0 4px 8px rgba(37, 99, 235, 0.3)",
                                                                 transform: "translateY(-1px)",
                                                             },
-                                                            fontSize: { xs: "0.78rem", sm: "0.875rem" },
-                                                            px: { xs: 1, sm: 1.5 },
+                                                            fontSize: "0.85rem",
                                                         }}
                                                     >
                                                         Edit
@@ -607,10 +567,9 @@ const EditableTable = () => {
                 page={page}
                 rowsPerPage={rowsPerPage}
                 totalRows={filteredAndSortedData.length}
-                onPageChange={setPage}
+                onPageChange={(newPage) => dispatch(setPage(newPage))}
                 onRowsPerPageChange={(value) => {
-                    setRowsPerPage(value);
-                    setPage(0);
+                    dispatch(setRowsPerPage(value));
                 }}
             />
         </Paper>
