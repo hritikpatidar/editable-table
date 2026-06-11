@@ -32,11 +32,34 @@ const EditableCell: React.FC<EditableCellProps> = ({
       value={value}
       disabled={disabled}
       onChange={handleChange}
+      autoFocus
       sx={{
-        minWidth: 180,
+        minWidth: 150,
         "& .MuiOutlinedInput-root": {
-          borderRadius: "8px",
-          backgroundColor: "#fff",
+          borderRadius: "6px",
+          backgroundColor: "var(--bg)",
+          transition: "all 0.2s",
+          "& fieldset": {
+            borderColor: "var(--border)",
+          },
+          "&:hover fieldset": {
+            borderColor: "var(--primary)",
+          },
+          "&.Mui-focused fieldset": {
+            borderColor: "var(--primary)",
+            borderWidth: 2,
+          },
+        },
+        "& .MuiOutlinedInput-input": {
+          color: "var(--text)",
+          fontWeight: 500,
+          fontSize: { xs: "0.85rem", md: "0.95rem" },
+          py: 1,
+          px: 1.25,
+        },
+        "& .MuiOutlinedInput-input::placeholder": {
+          color: "var(--text-lighter)",
+          opacity: 0.7,
         },
       }}
     />

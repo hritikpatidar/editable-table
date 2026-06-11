@@ -30,8 +30,33 @@ const Pagination: React.FC<PaginationProps> = ({
   return (
     <Box
       sx={{
-        borderTop: "1px solid #e0e0e0",
+        borderTop: "1px solid var(--border)",
         mt: 2,
+        backgroundColor: "var(--bg-light)",
+        borderRadius: "0 0 6px 6px",
+        "& .MuiTablePagination-root": {
+          fontSize: { xs: "0.85rem", md: "0.95rem" },
+        },
+        "& .MuiTablePagination-selectLabel": {
+          mb: 0,
+        },
+        "& .MuiTablePagination-displayedRows": {
+          mb: 0,
+        },
+        "& .MuiSelect-standard": {
+          color: "var(--text)",
+        },
+        "& .MuiIconButton-root": {
+          color: "var(--text-light)",
+          transition: "all 0.2s",
+          "&:hover:not(:disabled)": {
+            backgroundColor: "rgba(37, 99, 235, 0.1)",
+            color: "var(--primary)",
+          },
+          "&:disabled": {
+            opacity: 0.4,
+          },
+        },
       }}
     >
       <TablePagination
@@ -41,7 +66,7 @@ const Pagination: React.FC<PaginationProps> = ({
         rowsPerPage={rowsPerPage}
         onPageChange={handlePageChange}
         onRowsPerPageChange={handleRowsPerPageChange}
-        rowsPerPageOptions={[10, 25, 50, 100,]}
+        rowsPerPageOptions={[10, 25, 50, 100]}
       />
     </Box>
   );
