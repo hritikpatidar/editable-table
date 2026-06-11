@@ -20,7 +20,6 @@ const Home: React.FC = () => {
             }}
         >
             <Container maxWidth="xl">
-                {/* Breadcrumb */}
                 <Breadcrumbs
                     sx={{
                         mb: 3,
@@ -58,8 +57,6 @@ const Home: React.FC = () => {
                         Employee Management
                     </Typography>
                 </Breadcrumbs>
-
-                {/* Header Section */}
                 <Box sx={{ mb: 4 }}>
                     <Typography
                         variant="h4"
@@ -86,8 +83,6 @@ const Home: React.FC = () => {
                         sorting, and export capabilities.
                     </Typography>
                 </Box>
-
-                {/* Table Component */}
                 <EditableTable />
             </Container>
         </Box>

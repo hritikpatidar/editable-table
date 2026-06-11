@@ -29,9 +29,6 @@ import {
 } from "../redux/slices/tableDataSlice";
 import { Employee } from "../types/employee";
 
-/**
- * Hook for accessing and updating filter state
- */
 export const useFilters = () => {
     const dispatch = useDispatch<AppDispatch>();
     const nameFilter = useSelector((state: RootState) => state.filters.nameFilter);
@@ -49,9 +46,6 @@ export const useFilters = () => {
     };
 };
 
-/**
- * Hook for accessing and updating pagination state
- */
 export const usePagination = () => {
     const dispatch = useDispatch<AppDispatch>();
     const page = useSelector((state: RootState) => state.pagination.page);
@@ -65,9 +59,6 @@ export const usePagination = () => {
     };
 };
 
-/**
- * Hook for accessing and updating sort state
- */
 export const useSort = () => {
     const dispatch = useDispatch<AppDispatch>();
     const sortField = useSelector((state: RootState) => state.sort.sortField);
@@ -88,9 +79,6 @@ export const useSort = () => {
     };
 };
 
-/**
- * Hook for accessing and updating editing state
- */
 export const useEditing = () => {
     const dispatch = useDispatch<AppDispatch>();
     const editingRowId = useSelector((state: RootState) => state.editing.editingRowId);
@@ -109,9 +97,6 @@ export const useEditing = () => {
     };
 };
 
-/**
- * Hook for accessing and updating table data
- */
 export const useTableData = () => {
     const dispatch = useDispatch<AppDispatch>();
     const rows = useSelector((state: RootState) => state.tableData.rows);

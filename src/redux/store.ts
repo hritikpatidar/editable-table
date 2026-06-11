@@ -6,7 +6,6 @@ import paginationReducer from "./slices/paginationSlice";
 import sortReducer from "./slices/sortSlice";
 import editingReducer from "./slices/editingSlice";
 
-// Custom async localStorage implementation for redux-persist
 const customLocalStorage = {
   getItem: async (key: string) => {
     try {
@@ -37,7 +36,6 @@ const customLocalStorage = {
   },
 };
 
-// Individual persist configs for each reducer
 const tableDataPersistConfig = {
   key: "tableData",
   storage: customLocalStorage,
@@ -64,7 +62,7 @@ export const store = configureStore({
     filters: persistReducer(filtersPersistConfig, filtersReducer),
     pagination: persistReducer(paginationPersistConfig, paginationReducer),
     sort: persistReducer(sortPersistConfig, sortReducer),
-    editing: editingReducer, // Don't persist editing state
+    editing: editingReducer, 
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

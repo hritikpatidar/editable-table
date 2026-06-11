@@ -22,7 +22,6 @@ const tableDataSlice = createSlice({
     updateRow: (state, action: PayloadAction<Employee>) => {
       const index = state.rows.findIndex((r) => r.id === action.payload.id);
       if (index !== -1) {
-        // Save current state to undo history before updating
         state.undoHistory.push([...state.rows]);
         state.rows[index] = action.payload;
       }

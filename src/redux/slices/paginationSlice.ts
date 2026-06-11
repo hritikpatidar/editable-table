@@ -19,7 +19,7 @@ const paginationSlice = createSlice({
     },
     setRowsPerPage: (state, action: PayloadAction<number>) => {
       state.rowsPerPage = action.payload;
-      state.page = 0; // Reset to first page when rows per page changes
+      state.page = 0; 
     },
   },
 });

@@ -48,12 +48,10 @@ const TableToolbar: React.FC<TableToolbarProps> = ({
     const emailDebounce = useRef<number | null>(null);
     const salaryDebounce = useRef<number | null>(null);
 
-    // Sync incoming prop changes (e.g., on rehydrate) into local inputs
     useEffect(() => setLocalName(nameFilter), [nameFilter]);
     useEffect(() => setLocalEmail(emailFilter), [emailFilter]);
     useEffect(() => setLocalSalary(salaryFilter), [salaryFilter]);
 
-    // Debounce updates to avoid frequent dispatches / persistence on each keystroke
     useEffect(() => {
         if (nameDebounce.current) window.clearTimeout(nameDebounce.current);
         nameDebounce.current = window.setTimeout(() => setNameFilter(localName), 300) as unknown as number;
@@ -73,7 +71,6 @@ const TableToolbar: React.FC<TableToolbarProps> = ({
     }, [localSalary, setSalaryFilter]);
 
     const handleClear = () => {
-        // Clear persisted filters immediately and reset local inputs
         onClearFilters();
         setLocalName("");
         setLocalEmail("");
@@ -91,7 +88,6 @@ const TableToolbar: React.FC<TableToolbarProps> = ({
                 background: "linear-gradient(135deg, var(--bg) 0%, var(--bg-light) 100%)",
             }}
         >
-            {/* Filter Header */}
             <Box
                 sx={{
                     display: "flex",
@@ -118,7 +114,6 @@ const TableToolbar: React.FC<TableToolbarProps> = ({
                 </Typography>
             </Box>
 
-            {/* Main Controls Row - All in one line on desktop */}
             <Box
                 sx={{
                     display: "flex",
@@ -128,7 +123,6 @@ const TableToolbar: React.FC<TableToolbarProps> = ({
                     flexWrap: "wrap",
                 }}
             >
-                {/* Filter Inputs */}
                 <TextField
                     label="Name"
                     size="small"
@@ -214,7 +208,6 @@ const TableToolbar: React.FC<TableToolbarProps> = ({
                     }}
                 />
 
-                {/* Action Buttons */}
                 <Button
                     variant="outlined"
                     size="small"
@@ -275,7 +268,6 @@ const TableToolbar: React.FC<TableToolbarProps> = ({
                     Export CSV
                 </Button>
 
-                {/* Undo Button */}
                 <Tooltip title={undoAvailable ? `Undo last change` : "No changes to undo"}>
                     <span>
                         <Button
@@ -312,7 +304,6 @@ const TableToolbar: React.FC<TableToolbarProps> = ({
                     </span>
                 </Tooltip>
 
-                {/* Total Records - Flex spacer on mobile, right-aligned on desktop */}
                 <Box sx={{ flex: { xs: "1 1 100%", sm: "1", md: "0 1 auto" } }} />
 
                 <Typography

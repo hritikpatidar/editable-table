@@ -57,8 +57,6 @@ import { Employee } from "../types/employee";
 
 const EditableTable = () => {
     const dispatch = useDispatch<AppDispatch>();
-
-    // Redux selectors
     const rows = useSelector((state: RootState) => state.tableData.rows);
     const undoHistory = useSelector((state: RootState) => state.tableData.undoHistory);
     const nameFilter = useSelector((state: RootState) => state.filters.nameFilter);
@@ -203,7 +201,6 @@ const EditableTable = () => {
                 backgroundColor: "var(--bg)",
             }}
         >
-            {/* Main Content */}
             <Box sx={{ mb: 0 }}>
                 <Typography
                     variant="h6"
@@ -226,8 +223,6 @@ const EditableTable = () => {
                     Manage and edit employee information with inline editing and instant updates.
                 </Typography>
             </Box>
-
-            {/* Toolbar */}
             <TableToolbar
                 nameFilter={nameFilter}
                 emailFilter={emailFilter}
@@ -242,7 +237,6 @@ const EditableTable = () => {
                 totalRows={filteredAndSortedData.length}
             />
 
-            {/* Table Container */}
             <TableContainer
                 sx={{
                     borderRadius: 1,
@@ -562,7 +556,6 @@ const EditableTable = () => {
                 </Table>
             </TableContainer>
 
-            {/* Pagination */}
             <Pagination
                 page={page}
                 rowsPerPage={rowsPerPage}
