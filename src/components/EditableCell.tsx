@@ -14,17 +14,10 @@ const EditableCell: React.FC<EditableCellProps> = ({
   disabled = false,
   onChange,
 }) => {
-  const handleChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = event.target.value;
-
     if (type === "number") {
-      onChange(
-        inputValue === ""
-          ? ""
-          : Number(inputValue)
-      );
+      onChange(inputValue === "" ? "" : Number(inputValue));
     } else {
       onChange(inputValue);
     }

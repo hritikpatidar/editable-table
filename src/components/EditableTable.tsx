@@ -19,93 +19,33 @@ import { useTable } from "../context/TableContext";
 import EditableCell from "./EditableCell";
 import TableToolbar from "./TableToolbar";
 import Pagination from "./Pagination";
-import useUnsavedChanges from "../hooks/useUnsavedChanges";
 import { Employee } from "../types/employee";
 
 const EditableTable = () => {
     const { rows, setRows } = useTable();
-    // -----------------------------
-    // Filters
-    // -----------------------------
-
-    const [nameFilter, setNameFilter] =
-        useState("");
-
-    const [emailFilter, setEmailFilter] =
-        useState("");
-
-    const [salaryFilter, setSalaryFilter] =
-        useState("");
-
-    // -----------------------------
-    // Pagination
-    // -----------------------------
-
+    const [nameFilter, setNameFilter] = useState("");
+    const [emailFilter, setEmailFilter] = useState("");
+    const [salaryFilter, setSalaryFilter] = useState("");
     const [page, setPage] = useState(0);
-
-    const [rowsPerPage, setRowsPerPage] =
-        useState(25);
-
-    // -----------------------------
-    // Sorting
-    // -----------------------------
-
-    const [sortField, setSortField] =
-        useState<keyof Employee>("id");
-
-    const [sortDirection, setSortDirection] =
-        useState<"asc" | "desc">("asc");
-
-    // -----------------------------
-    // Editing
-    // -----------------------------
-
-    const [editingRowId, setEditingRowId] =
-        useState<number | null>(null);
-
-    const [draftRow, setDraftRow] =
-        useState<Employee | null>(null);
-
-    const [undoHistory, setUndoHistory] =
-        useState<Employee[]>([]);
-
+    const [rowsPerPage, setRowsPerPage] = useState(25);
+    const [sortField, setSortField] = useState<keyof Employee>("id");
+    const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+    const [editingRowId, setEditingRowId] = useState<number | null>(null);
+    const [draftRow, setDraftRow] = useState<Employee | null>(null);
+    const [undoHistory, setUndoHistory] = useState<Employee[]>([]);
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-    // -----------------------------
-    // CSV Export
-    // -----------------------------
-
     const handleExportCSV = () => {
-        const csv =
-            Papa.unparse(filteredAndSortedData);
-
-        const blob = new Blob([csv], {
-            type: "text/csv;charset=utf-8;",
-        });
-
-        const url =
-            URL.createObjectURL(blob);
-
-        const link =
-            document.createElement("a");
-
+        const csv = Papa.unparse(filteredAndSortedData);
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;", });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
         link.href = url;
-
-        link.setAttribute(
-            "download",
-            "employees.csv"
-        );
-
+        link.setAttribute("download", "employees.csv");
         document.body.appendChild(link);
-
         link.click();
-
         document.body.removeChild(link);
     };
-
-    // -----------------------------
-    // Clear Filters
-    // -----------------------------
 
     const handleClearFilters =
         useCallback(() => {
@@ -113,10 +53,6 @@ const EditableTable = () => {
             setEmailFilter("");
             setSalaryFilter("");
         }, []);
-
-    // -----------------------------
-    // Filter Data
-    // -----------------------------
 
     const filteredData = useMemo(() => {
         return rows.filter((item: Employee) => {
@@ -146,16 +82,7 @@ const EditableTable = () => {
                 matchSalary
             );
         });
-    }, [
-        rows,
-        nameFilter,
-        emailFilter,
-        salaryFilter,
-    ]);
-
-    // -----------------------------
-    // Sorting Logic
-    // -----------------------------
+    }, [rows, nameFilter, emailFilter, salaryFilter,]);
 
     const filteredAndSortedData =
         useMemo(() => {
@@ -185,83 +112,37 @@ const EditableTable = () => {
             });
 
             return copied;
-        }, [
-            filteredData,
-            sortField,
-            sortDirection,
-        ]);
-
-    // -----------------------------
-    // Pagination Data
-    // -----------------------------
+        }, [filteredData, sortField, sortDirection,]);
 
     const paginatedData =
         useMemo(() => {
-            const start =
-                page * rowsPerPage;
+            const start = page * rowsPerPage;
 
-            const end =
-                start + rowsPerPage;
+            const end = start + rowsPerPage;
 
-            return filteredAndSortedData.slice(
-                start,
-                end
-            );
-        }, [
-            filteredAndSortedData,
-            page,
-            rowsPerPage,
-        ]);
+            return filteredAndSortedData.slice(start, end);
+        }, [filteredAndSortedData, page, rowsPerPage,]);
 
-    // -----------------------------
-    // Edit Row
-    // -----------------------------
-
-    const handleEdit = (
-        row: Employee
-    ) => {
+    const handleEdit = (row: Employee) => {
         setEditingRowId(row.id);
-
         setDraftRow({
             ...row,
         });
-
         setHasUnsavedChanges(false);
     };
 
-    // -----------------------------
-    // Cell Change
-    // -----------------------------
-
-    const handleCellChange = (
-        field: keyof Employee,
-        value: string | number
-    ) => {
+    const handleCellChange = (field: keyof Employee, value: string | number) => {
         if (!draftRow) return;
-
         setDraftRow({
             ...draftRow,
             [field]: value,
         });
-
         setHasUnsavedChanges(true);
     };
 
-    // -----------------------------
-    // Save Row
-    // -----------------------------
-
     const handleSave = () => {
         if (!draftRow) return;
-
-        const oldRow = rows.find(
-            (
-                item: Employee
-            ) =>
-                item.id ===
-                draftRow.id
-        );
-
+        const oldRow = rows.find((item: Employee) => item.id === draftRow.id);
         if (oldRow) {
             setUndoHistory(
                 (prev) => [
@@ -270,191 +151,61 @@ const EditableTable = () => {
                 ]
             );
         }
-
-        setRows(
-            (
-                prev: Employee[]
-            ) =>
-                prev.map(
-                    (
-                        item: Employee
-                    ) =>
-                        item.id ===
-                            draftRow.id
-                            ? draftRow
-                            : item
-                )
+        setRows((prev: Employee[]) =>
+            prev.map((item: Employee) => item.id === draftRow.id ? draftRow : item)
         );
-
-        setEditingRowId(
-            null
-        );
-
-        setDraftRow(
-            null
-        );
-
-        setHasUnsavedChanges(
-            false
-        );
+        setEditingRowId(null);
+        setDraftRow(null);
+        setHasUnsavedChanges(false);
     };
 
-    // -----------------------------
-    // Cancel Edit
-    // -----------------------------
+    const handleCancel = () => {
+        setEditingRowId(null);
+        setDraftRow(null);
+        setHasUnsavedChanges(false);
+    };
 
-    const handleCancel =
-        () => {
-            setEditingRowId(
-                null
-            );
-
-            setDraftRow(
-                null
-            );
-
-            setHasUnsavedChanges(
-                false
-            );
-        };
-
-    // -----------------------------
-    // Undo
-    // -----------------------------
-
-    const handleUndo =
-        () => {
-            if (
-                undoHistory.length ===
-                0
+    const handleUndo = () => {
+        if (undoHistory.length === 0) return;
+        const previousRow = undoHistory[undoHistory.length - 1];
+        setRows((prev: Employee[]) =>
+            prev.map(
+                (
+                    item: Employee
+                ) =>
+                    item.id ===
+                        previousRow.id
+                        ? previousRow
+                        : item
             )
-                return;
+        );
+        setUndoHistory((prev) => prev.slice(0, -1));
+    };
 
-            const previousRow =
-                undoHistory[
-                undoHistory.length -
-                1
-                ];
+    const handleSort = (field: keyof Employee) => {
+        if (sortField === field) {
+            setSortDirection((prev) => prev === "asc" ? "desc" : "asc");
+        } else {
+            setSortField(field);
+            setSortDirection("asc");
+        }
+    };
 
-            setRows(
-                (
-                    prev: Employee[]
-                ) =>
-                    prev.map(
-                        (
-                            item: Employee
-                        ) =>
-                            item.id ===
-                                previousRow.id
-                                ? previousRow
-                                : item
-                    )
-            );
+    const renderSortArrow = (field: keyof Employee) => {
+        if (sortField !== field) return "";
+        return sortDirection === "asc" ? " ↑" : " ↓";
+    };
 
-            setUndoHistory(
-                (
-                    prev
-                ) =>
-                    prev.slice(
-                        0,
-                        -1
-                    )
-            );
-        };
-
-    // -----------------------------
-    // Sorting
-    // -----------------------------
-
-    const handleSort =
-        (
-            field:
-                keyof Employee
-        ) => {
-            if (
-                sortField ===
-                field
-            ) {
-                setSortDirection(
-                    (
-                        prev
-                    ) =>
-                        prev ===
-                            "asc"
-                            ? "desc"
-                            : "asc"
-                );
-            } else {
-                setSortField(
-                    field
-                );
-
-                setSortDirection(
-                    "asc"
-                );
+    React.useEffect(() => {
+        const handler = (e: BeforeUnloadEvent) => {
+            if (hasUnsavedChanges) {
+                e.preventDefault();
+                e.returnValue = "";
             }
         };
-
-    // -----------------------------
-    // Header Helper
-    // -----------------------------
-
-    const renderSortArrow =
-        (
-            field:
-                keyof Employee
-        ) => {
-            if (
-                sortField !==
-                field
-            )
-                return "";
-
-            return sortDirection ===
-                "asc"
-                ? " ↑"
-                : " ↓";
-        };
-
-    // -----------------------------
-    // Unsaved Changes Warning
-    // -----------------------------
-
-    React.useEffect(
-        () => {
-            const handler =
-                (
-                    e: BeforeUnloadEvent
-                ) => {
-                    if (
-                        hasUnsavedChanges
-                    ) {
-                        e.preventDefault();
-
-                        e.returnValue =
-                            "";
-                    }
-                };
-
-            window.addEventListener(
-                "beforeunload",
-                handler
-            );
-
-            return () =>
-                window.removeEventListener(
-                    "beforeunload",
-                    handler
-                );
-        },
-        [
-            hasUnsavedChanges,
-        ]
-    );
-
-    // -----------------------------
-    // Table Header Config
-    // -----------------------------
+        window.addEventListener("beforeunload", handler);
+        return () => window.removeEventListener("beforeunload", handler);
+    }, [hasUnsavedChanges,]);
 
     const headers = [
         {
@@ -493,7 +244,6 @@ const EditableTable = () => {
                 Employee Management Table
             </Typography>
 
-            {/* Toolbar */}
             <TableToolbar
                 nameFilter={nameFilter}
                 emailFilter={emailFilter}
@@ -501,18 +251,11 @@ const EditableTable = () => {
                 setNameFilter={setNameFilter}
                 setEmailFilter={setEmailFilter}
                 setSalaryFilter={setSalaryFilter}
-                onClearFilters={
-                    handleClearFilters
-                }
-                onExportCSV={
-                    handleExportCSV
-                }
-                totalRows={
-                    filteredAndSortedData.length
-                }
+                onClearFilters={ handleClearFilters}
+                onExportCSV={handleExportCSV}
+                totalRows={filteredAndSortedData.length}
             />
 
-            {/* Undo */}
             <Box sx={{
                 mb: 2,
             }}
@@ -520,16 +263,12 @@ const EditableTable = () => {
                 <Button
                     variant="outlined"
                     color="warning"
-                    disabled={
-                        undoHistory.length === 0
-                    }
+                    disabled={ undoHistory.length === 0}
                     onClick={handleUndo}
                 >
                     Undo Last Change
                 </Button>
             </Box>
-
-            {/* Table */}
 
             <Box
                 sx={{
@@ -541,8 +280,7 @@ const EditableTable = () => {
                 <table
                     style={{
                         width: "100%",
-                        borderCollapse:
-                            "collapse",
+                        borderCollapse: "collapse",
                     }}
                 >
                     <thead>
@@ -551,40 +289,26 @@ const EditableTable = () => {
                                 (header) => (
                                     <th
                                         key={header.key}
-                                        onClick={() =>
-                                            handleSort(
-                                                header.key
-                                            )
-                                        }
+                                        onClick={() => handleSort( header.key )}
                                         style={{
-                                            cursor:
-                                                "pointer",
-                                            padding:
-                                                "12px",
-                                            background:
-                                                "#f5f5f5",
-                                            borderBottom:
-                                                "1px solid #ddd",
-                                            textAlign:
-                                                "left",
+                                            cursor: "pointer",
+                                            padding: "12px",
+                                            background: "#f5f5f5",
+                                            borderBottom: "1px solid #ddd",
+                                            textAlign: "left",
                                         }}
                                     >
                                         {header.label}
-                                        {renderSortArrow(
-                                            header.key
-                                        )}
+                                        {renderSortArrow(header.key)}
                                     </th>
                                 )
                             )}
 
                             <th
                                 style={{
-                                    padding:
-                                        "12px",
-                                    background:
-                                        "#f5f5f5",
-                                    borderBottom:
-                                        "1px solid #ddd",
+                                    padding: "12px",
+                                    background: "#f5f5f5",
+                                    borderBottom: "1px solid #ddd",
                                 }}
                             >
                                 Actions
@@ -593,191 +317,121 @@ const EditableTable = () => {
                     </thead>
 
                     <tbody>
-                        {paginatedData.map(
-                            (
-                                row: Employee
-                            ) => {
-                                const isEditing =
-                                    editingRowId ===
-                                    row.id;
-
-                                return (
-                                    <tr
-                                        key={
-                                            row.id
-                                        }
+                        {paginatedData.map((row: Employee) => {
+                            const isEditing = editingRowId === row.id;
+                            return (
+                                <tr key={row.id} >
+                                    <td
+                                        style={{
+                                            padding: "10px",
+                                            borderBottom: "1px solid #eee",
+                                        }}
                                     >
-                                        {/* ID */}
-                                        <td
-                                            style={{
-                                                padding:
-                                                    "10px",
-                                                borderBottom:
-                                                    "1px solid #eee",
-                                            }}
-                                        >
-                                            {row.id}
-                                        </td>
-
-                                        {/* Name */}
-                                        <td
-                                            style={{
-                                                padding:
-                                                    "10px",
-                                                borderBottom:
-                                                    "1px solid #eee",
-                                            }}
-                                        >
-                                            {isEditing &&
-                                                draftRow ? (
-                                                <EditableCell
-                                                    value={
-                                                        draftRow.name
-                                                    }
-                                                    onChange={(
-                                                        value
-                                                    ) =>
-                                                        handleCellChange(
-                                                            "name",
-                                                            value
-                                                        )
-                                                    }
-                                                />
-                                            ) : (
-                                                row.name
-                                            )}
-                                        </td>
-
-                                        {/* Email */}
-                                        <td
-                                            style={{
-                                                padding:
-                                                    "10px",
-                                                borderBottom:
-                                                    "1px solid #eee",
-                                            }}
-                                        >
-                                            {isEditing &&
-                                                draftRow ? (
-                                                <EditableCell
-                                                    value={
-                                                        draftRow.email
-                                                    }
-                                                    onChange={(
-                                                        value
-                                                    ) =>
-                                                        handleCellChange(
-                                                            "email",
-                                                            value
-                                                        )
-                                                    }
-                                                />
-                                            ) : (
-                                                row.email
-                                            )}
-                                        </td>
-
-                                        {/* Salary */}
-                                        <td
-                                            style={{
-                                                padding:
-                                                    "10px",
-                                                borderBottom:
-                                                    "1px solid #eee",
-                                            }}
-                                        >
-                                            {isEditing &&
-                                                draftRow ? (
-                                                <EditableCell
-                                                    type="number"
-                                                    value={
-                                                        draftRow.salary
-                                                    }
-                                                    onChange={(
-                                                        value
-                                                    ) =>
-                                                        handleCellChange(
-                                                            "salary",
-                                                            Number(
-                                                                value
-                                                            )
-                                                        )
-                                                    }
-                                                />
-                                            ) : (
-                                                `₹${row.salary.toLocaleString()}`
-                                            )}
-                                        </td>
-
-                                        {/* Actions */}
-                                        <td
-                                            style={{
-                                                padding:
-                                                    "10px",
-                                                borderBottom:
-                                                    "1px solid #eee",
-                                            }}
-                                        >
-                                            {isEditing ? (
-                                                <Stack
-                                                    direction="row"
-                                                    spacing={
-                                                        1
-                                                    }
-                                                >
-                                                    <Button
-                                                        variant="contained"
-                                                        color="success"
-                                                        size="small"
-                                                        onClick={
-                                                            handleSave
-                                                        }
-                                                    >
-                                                        Save
-                                                    </Button>
-
-                                                    <Button
-                                                        variant="outlined"
-                                                        color="error"
-                                                        size="small"
-                                                        onClick={
-                                                            handleCancel
-                                                        }
-                                                    >
-                                                        Cancel
-                                                    </Button>
-                                                </Stack>
-                                            ) : (
+                                        {row.id}
+                                    </td>
+                                    <td
+                                        style={{
+                                            padding: "10px",
+                                            borderBottom: "1px solid #eee",
+                                        }}
+                                    >
+                                        {isEditing &&
+                                            draftRow ? (
+                                            <EditableCell
+                                                value={draftRow.name}
+                                                onChange={(value) => handleCellChange("name", value)}
+                                            />
+                                        ) : (
+                                            row.name
+                                        )}
+                                    </td>
+                                    <td
+                                        style={{
+                                            padding: "10px",
+                                            borderBottom: "1px solid #eee",
+                                        }}
+                                    >
+                                        {isEditing &&
+                                            draftRow ? (
+                                            <EditableCell
+                                                value={draftRow.email}
+                                                onChange={(value) => handleCellChange("email", value)}
+                                            />
+                                        ) : (
+                                            row.email
+                                        )}
+                                    </td>
+                                    <td
+                                        style={{
+                                            padding: "10px",
+                                            borderBottom: "1px solid #eee",
+                                        }}
+                                    >
+                                        {isEditing &&
+                                            draftRow ? (
+                                            <EditableCell
+                                                type="number"
+                                                value={draftRow.salary}
+                                                onChange={(value) => handleCellChange("salary", Number(value))}
+                                            />
+                                        ) : (
+                                            `₹${row.salary.toLocaleString()}`
+                                        )}
+                                    </td>
+                                    <td
+                                        style={{
+                                            padding: "10px",
+                                            borderBottom: "1px solid #eee",
+                                        }}
+                                    >
+                                        {isEditing ? (
+                                            <Stack
+                                                direction="row"
+                                                spacing={
+                                                    1
+                                                }
+                                            >
                                                 <Button
                                                     variant="contained"
+                                                    color="success"
                                                     size="small"
-                                                    onClick={() =>
-                                                        handleEdit(
-                                                            row
-                                                        )
-                                                    }
+                                                    onClick={handleSave}
                                                 >
-                                                    Edit
+                                                    Save
                                                 </Button>
-                                            )}
-                                        </td>
-                                    </tr>
-                                );
-                            }
+
+                                                <Button
+                                                    variant="outlined"
+                                                    color="error"
+                                                    size="small"
+                                                    onClick={handleCancel}
+                                                >
+                                                    Cancel
+                                                </Button>
+                                            </Stack>
+                                        ) : (
+                                            <Button
+                                                variant="contained"
+                                                size="small"
+                                                onClick={() => handleEdit(row)}
+                                            >
+                                                Edit
+                                            </Button>
+                                        )}
+                                    </td>
+                                </tr>
+                            );
+                        }
                         )}
 
                         {paginatedData.length ===
                             0 && (
                                 <tr>
                                     <td
-                                        colSpan={
-                                            5
-                                        }
+                                        colSpan={5}
                                         style={{
-                                            padding:
-                                                "20px",
-                                            textAlign:
-                                                "center",
+                                            padding: "20px",
+                                            textAlign: "center",
                                         }}
                                     >
                                         No Data Found
@@ -787,25 +441,13 @@ const EditableTable = () => {
                     </tbody>
                 </table>
             </Box>
-
-            {/* Pagination */}
             <Pagination
                 page={page}
-                rowsPerPage={
-                    rowsPerPage
-                }
-                totalRows={
-                    filteredAndSortedData.length
-                }
-                onPageChange={
-                    setPage
-                }
-                onRowsPerPageChange={(
-                    value
-                ) => {
-                    setRowsPerPage(
-                        value
-                    );
+                rowsPerPage={rowsPerPage}
+                totalRows={filteredAndSortedData.length}
+                onPageChange={setPage}
+                onRowsPerPageChange={(value) => {
+                    setRowsPerPage(value);
                     setPage(0);
                 }}
             />

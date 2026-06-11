@@ -11,29 +11,15 @@ interface TableToolbarProps {
     nameFilter: string;
     emailFilter: string;
     salaryFilter: string;
-
-    setNameFilter: (
-        value: string
-    ) => void;
-
-    setEmailFilter: (
-        value: string
-    ) => void;
-
-    setSalaryFilter: (
-        value: string
-    ) => void;
-
+    setNameFilter: (value: string) => void;
+    setEmailFilter: (value: string) => void;
+    setSalaryFilter: (value: string) => void;
     onClearFilters: () => void;
-
     onExportCSV: () => void;
-
     totalRows: number;
 }
 
-const TableToolbar: React.FC<
-    TableToolbarProps
-> = ({
+const TableToolbar: React.FC< TableToolbarProps> = ({
     nameFilter,
     emailFilter,
     salaryFilter,
@@ -68,7 +54,6 @@ const TableToolbar: React.FC<
                         justifyContent: "space-between",
                     }}
                 >
-                    {/* Filters */}
                     <Stack
                         sx={{
                             display: "flex",
@@ -84,22 +69,14 @@ const TableToolbar: React.FC<
                             label="Filter Name"
                             size="small"
                             value={nameFilter}
-                            onChange={(e) =>
-                                setNameFilter(
-                                    e.target.value
-                                )
-                            }
+                            onChange={(e) =>setNameFilter(e.target.value )}
                         />
 
                         <TextField
                             label="Filter Email"
                             size="small"
                             value={emailFilter}
-                            onChange={(e) =>
-                                setEmailFilter(
-                                    e.target.value
-                                )
-                            }
+                            onChange={(e) =>setEmailFilter( e.target.value )}
                         />
 
                         <TextField
@@ -107,15 +84,10 @@ const TableToolbar: React.FC<
                             type="number"
                             size="small"
                             value={salaryFilter}
-                            onChange={(e) =>
-                                setSalaryFilter(
-                                    e.target.value
-                                )
-                            }
+                            onChange={(e) => setSalaryFilter(e.target.value)}
                         />
                     </Stack>
 
-                    {/* Actions */}
                     <Stack
                         direction="row"
                         spacing={2}
@@ -123,18 +95,14 @@ const TableToolbar: React.FC<
                         <Button
                             variant="outlined"
                             color="error"
-                            onClick={
-                                onClearFilters
-                            }
+                            onClick={ onClearFilters}
                         >
                             Clear Filters
                         </Button>
 
                         <Button
                             variant="contained"
-                            onClick={
-                                onExportCSV
-                            }
+                            onClick={onExportCSV}
                         >
                             Export CSV
                         </Button>
@@ -154,6 +122,4 @@ const TableToolbar: React.FC<
         );
     };
 
-export default React.memo(
-    TableToolbar
-);
+export default React.memo(TableToolbar);

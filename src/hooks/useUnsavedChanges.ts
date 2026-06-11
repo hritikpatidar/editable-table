@@ -4,27 +4,14 @@ const useUnsavedChanges = (
   hasUnsavedChanges: boolean
 ) => {
   useEffect(() => {
-    const handleBeforeUnload = (
-      event: BeforeUnloadEvent
-    ) => {
-      if (!hasUnsavedChanges)
-        return;
-
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (!hasUnsavedChanges) return;
       event.preventDefault();
-
       event.returnValue = "";
     };
-
-    window.addEventListener(
-      "beforeunload",
-      handleBeforeUnload
-    );
-
+    window.addEventListener("beforeunload", handleBeforeUnload);
     return () => {
-      window.removeEventListener(
-        "beforeunload",
-        handleBeforeUnload
-      );
+      window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, [hasUnsavedChanges]);
 };
